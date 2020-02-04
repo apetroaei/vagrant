@@ -1,0 +1,58 @@
+Vagrant.configure("2") do |config|
+  # Ubuntu 14.04 LTS x64 official cloud image
+  config.vm.box = "ubuntu/trusty64"
+  config.vm.box_check_update = false
+
+  # VirtualBox
+  # common settings
+  config.vm.provider "virtualbox" do |vb|
+    vb.cpus = 1 # cpu cores, can't be more than the host actually has!
+    vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"] # fixes slow dns lookups
+  end
+
+  config.vm.define "mothership" do |srv|
+    srv.vm.hostname = "mothership"
+    srv.vm.network :private_network, ip: "192.168.9.2"
+
+    srv.vm.provider "virtualbox" do |vb|
+      vb.name = "Mothership"
+      vb.memory = 1024
+    end
+
+    # use local ubuntu mirror
+    srv.vm.provision :shell, inline: "sed -i 's/archive.ubuntu.com/lv.archive.ubuntu.com/g' /etc/apt/sources.list"
+    # add swap
+    srv.vm.provision :shell, inline: "fallocate -l 4G /swapfile && chmod 0600 /swapfile && mkswap /swapfile && swapon /swapfile && echo '/swapfile none swap sw 0 0' >> /etc/fstab"
+    # tools
+    srv.vm.provision :shell, inline: "apt-get update"
+    srv.vm.provision :shell, inline: "apt-get install -y python-pip unzip sshpass"
+    srv.vm.provision :shell, inline: "pip install ansible"
+
+    # network
+    config.vm.network "forwarded_port", guest: 9200, host: 9200
+  end
+
+  config.vm.define "app1" do |srv|
+    srv.vm.hostname = "app1"
+    srv.vm.network :private_network, ip: "192.168.9.3"
+
+    srv.vm.provider "virtualbox" do |vb|
+      vb.name = "App1"
+      vb.memory = 256
+    end
+  end
+
+  config.vm.define "app2" do |srv|
+    srv.vm.hostname = "app2"
+    srv.vm.network :private_network, ip: "192.168.9.4"
+
+    srv.vm.provider "virtualbox" do |vb|
+      vb.name = "App2"
+      vb.memory = 256
+    end
+  end
+
+  # enable logging in via ssh with a password
+  config.ssh.username = "vagrant"
+  config.ssh.password = "vagrant"
+end

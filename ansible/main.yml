@@ -1,0 +1,27 @@
+---
+- hosts: ubuntu
+  become: true
+  tasks:
+    - name: Set default target to cli
+      shell: systemctl set-default multi-user.target
+
+    - name: Install dev tools
+      apt:
+        name: "{{ item }}"  
+        state: present
+        with_items:
+          - nginx
+          - mysql-server
+
+    - name: Enable nginx
+      systemd:
+        name: nginx
+        state: started
+        enabled: true
+        
+    - name: Enable mysql
+      systemd:
+        name: mysql
+        state: started
+        enabled: true
+
