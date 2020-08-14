@@ -8,6 +8,8 @@ Vagrant.configure("2") do |config|
 
   # Every Vagrant development environment requires a box. You can search for
   # boxes at https://vagrantcloud.com/search.
+  config.vm.define "name_of_vm"
+  config.vm.hostname = "host_name"
   config.vm.box = "debian/jessie64"
 
   # Create a forwarded port mapping which allows access to a specific port
@@ -28,6 +30,8 @@ Vagrant.configure("2") do |config|
   
   config.vm.provider "virtualbox" do |vb|
   # Customize the amount of memory on the VM:
+  vb.gui = false
+  vb.name = "name_of_vm"
   vb.memory = "2048"
   vb.cpus = "2"
   end
