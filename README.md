@@ -53,3 +53,85 @@ Be sure that you are in the same directory as the Vagrantfile when running these
 
 # Notes
 - If you are using [VVV](https://github.com/varying-vagrant-vagrants/vvv/), you can enable xdebug by running `vagrant ssh` and then `xdebug_on` from the virtual machine's CLI.
+
+
+# Build a custom Vagrant box 
+
+
+## Configure the Virtual Hardware
+
+Create a new Virtual Machine with the following settings:
+
+	Name: focal_fossa
+	Type: Linux
+	Version: Ubuntu64
+	Memory Size: 1024MB
+	New Virtual Disk: [Type: VMDK, Size: 25 GB]
+
+Modify the hardware settings of the virtual machine for performance and because SSH needs port-forwarding enabled for the vagrant user:
+
+    Disable audio
+    Disable USB
+    Ensure Network Adapter 1 is set to NAT
+    Add this port-forwarding rule: [Name: SSH, Protocol: TCP, Host IP: blank, Host Port: 2222, Guest IP: blank, Guest Port: 22]
+
+Mount the Linux Distro ISO and boot up the server.
+
+## Install The Operating System
+
+Follow the on-screen prompts. And when prompted to setup a user, set the user to vagrant and the password to vagrant. 
+
+## Setup the Super User
+
+Vagrant must be able run sudo commands without a password prompt. Anything in the /etc/sudoers.d/* folder is included in the “sudoers” privileges when created by the root user.
+
+```
+sudo -s
+visudo -f /etc/sudoers.d/vagrant
+
+# add vagrant user
+vagrant ALL=(ALL) NOPASSWD:ALL
+```
+
+## Updating The Operating System
+
+```
+sudo apt-get update
+sudo apt-get upgrade -y 
+sudo apt-get dist-upgrade -y
+sudo update-grub 
+sudo apt-get install linux-headers-$(uname -r) build-essential dkms
+sudo apt-get autoremove 
+sudo apt-get autoclean
+```
+## VirtualBox Guest Additions
+
+VirtualBox Guest Additions must be installed so that things such as shared folders can function. Installing guest additions also usually improves performance since the guest OS can make some optimizations by knowing it is running within VirtualBox.
+
+```
+sudo mount /dev/cdrom /media/cdrom
+sudo sh /media/cdrom/VBoxLinuxAdditions.run
+```
+
+## “Zero out” the drive
+
+```
+sudo dd if=/dev/zero of=/EMPTY bs=1M
+sudo rm -f /EMPTY
+```
+
+## Vagrant public key
+
+`ssh-keygen`
+```wget https://raw.github.com/mitchellh/vagrant/master/keys/vagrant.pub \
+    -O /home/vagrant/.ssh/authorized_keys```
+`chmod 0600 /home/vagrant/.ssh/authorized_keys`
+`chown -R vagrant /home/vagrant/.ssh`
+
+`sudo update-alternatives --config editor`
+
+## Packaging the box
+
+vagrant package --base focal_fossa
+vagrant box add focal_fossa package.box
+vagrant init focal_fossa
