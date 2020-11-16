@@ -123,15 +123,18 @@ sudo rm -f /EMPTY
 ## Vagrant public key
 
 `ssh-keygen`
-```wget https://raw.github.com/mitchellh/vagrant/master/keys/vagrant.pub \
-    -O /home/vagrant/.ssh/authorized_keys```
+```
+wget https://raw.github.com/mitchellh/vagrant/master/keys/vagrant.pub \
+-O /home/vagrant/.ssh/authorized_keys
+```
 `chmod 0600 /home/vagrant/.ssh/authorized_keys`
 `chown -R vagrant /home/vagrant/.ssh`
 
 `sudo update-alternatives --config editor`
 
 ## Packaging the box
-
+```
 vagrant package --base focal_fossa
 vagrant box add focal_fossa package.box
 vagrant init focal_fossa
+```
